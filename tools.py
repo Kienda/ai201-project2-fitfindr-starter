@@ -268,7 +268,7 @@ def _try_groq_completion(prompt: str, temperature: float = 0.6) -> str | None:
     try:
         client = _get_groq_client()
         response = client.chat.completions.create(
-            model=os.environ.get("GROQ_MODEL", "llama-3.1-8b-instant"),
+            model=os.environ.get("GROQ_MODEL", "llama-3.3-70b-versatile"),
             messages=[
                 {
                     "role": "system",
@@ -518,7 +518,7 @@ def create_fit_card(outfit: str, new_item: dict) -> str:
         f"Item: {_format_item_for_prompt(new_item)}\n\n"
         f"Outfit suggestion: {outfit}"
     )
-    llm_card = _try_groq_completion(prompt, temperature=0.8)
+    llm_card = _try_groq_completion(prompt, temperature=0.9)
     if llm_card:
         return llm_card
 
