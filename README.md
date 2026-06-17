@@ -1,130 +1,81 @@
-# FitFindr — Starter Kit
+# FitFindr
 
-This starter kit contains everything you need to begin Project 2.
-
-## What's Included
-
-```
-ai201-project2-fitfindr-starter/
-├── data/
-│   ├── listings.json          # 40 mock secondhand listings
-│   └── wardrobe_schema.json   # Wardrobe format + example wardrobe
-├── utils/
-│   └── data_loader.py         # Helper functions for loading the data
-├── planning.md                # Your planning template — fill this out first
-└── requirements.txt           # Python dependencies
-```
+FitFindr helps a user find a secondhand clothing listing from a natural language request, then recommends an outfit and produces a final fit card.
 
 ## Setup
 
-**macOS / Linux:**
 ```bash
-python -m venv .venv
-source .venv/bin/activate
 pip install -r requirements.txt
 ```
 
-**Windows:**
-```bash
-python -m venv .venv
-source .venv/Scripts/activate
-pip install -r requirements.txt
-```
+Optional LLM-powered wording uses Groq. Add a `.env` file if you want live model responses:
 
-Set your Groq API key in a `.env` file (get a free key at [console.groq.com](https://console.groq.com)):
-```
+```text
 GROQ_API_KEY=your_key_here
 ```
 
-## The Mock Listings Dataset
+The app still works without an API key because the tools include local fallback styling and fit-card generation.
 
-`data/listings.json` contains 40 mock secondhand listings across categories (tops, bottoms, outerwear, shoes, accessories) and styles (vintage, y2k, grunge, cottagecore, streetwear, and more).
+## Run
 
-Each listing has: `id`, `title`, `description`, `category`, `style_tags`, `size`, `condition`, `price`, `colors`, `brand`, and `platform`.
-
-Load it with:
-```python
-from utils.data_loader import load_listings
-listings = load_listings()
+```bash
+python app.py
 ```
 
-## The Wardrobe Schema
-
-`data/wardrobe_schema.json` defines the format your agent uses to represent a user's existing wardrobe. It includes:
-
-- `schema`: field definitions for a wardrobe item
-- `example_wardrobe`: a sample wardrobe with 10 items you can use for testing
-- `empty_wardrobe`: a starting template for a new user
-
-Load an example wardrobe with:
-```python
-from utils.data_loader import get_example_wardrobe
-wardrobe = get_example_wardrobe()
-```
+Then open the local Gradio URL printed in the terminal.
 
 ## Tool Inventory
 
-Your README submission must document each tool's name, inputs, and return value. **These must exactly match your actual function signatures in `tools.py`.** Your documented interfaces will be checked against your actual function signatures in `tools.py` — if the parameter count or types contradict what's in the code, you may not receive full credit for that tool.
+### `search_listings(description: str, size: str | None = None, max_price: float | None = None) -> list[dict]`
 
----
+Searches `data/listings.json` for listings matching the user's description. It filters by optional size and maximum price, scores the remaining listings by keyword/category/color/style relevance, and returns matching listing dictionaries sorted best-first.
+
+### `suggest_outfit(new_item: dict, wardrobe: dict) -> str`
+
+Creates one outfit recommendation for the selected listing. If the wardrobe has saved items, it prefers named wardrobe pieces; if the wardrobe is empty, it returns general styling advice for the selected item.
+
+### `create_fit_card(outfit: str, new_item: dict) -> str`
+
+Creates the final user-facing recommendation card. The card includes the selected item, category, price, platform, suggested outfit, and a short explanation of why the outfit works.
 
 ## Interaction Walkthrough
 
-<!-- Walk through a complete interaction step by step: natural language query → each tool call (and why) → final fit card.
-     Walk through this carefully — it's how graders follow your agent's reasoning without a live demo.
-     Use a specific example — do not leave this as a template. -->
-
 **User query:**
+`vintage graphic tee under $30`
 
-**Step 1 — Tool called:**
-- Tool:
-- Input:
-- Why this tool:
-- Output:
+**Step 1 - Tool called:**
+- Tool: `search_listings`
+- Input: `description="vintage graphic tee"`, `size=None`, `max_price=30.0`
+- Why this tool: The agent needs to find matching listings before it can style anything.
+- Output: A ranked list of matches, with `Graphic Tee - 2003 Tour Bootleg Style` selected as the top result.
 
-**Step 2 — Tool called:**
-- Tool:
-- Input:
-- Why this tool:
-- Output:
+**Step 2 - Tool called:**
+- Tool: `suggest_outfit`
+- Input: the selected listing and the chosen wardrobe.
+- Why this tool: The selected item needs to be turned into a wearable outfit recommendation.
+- Output: A styling suggestion using the selected tee with compatible wardrobe pieces such as denim, sneakers, and an outer layer.
 
-**Step 3 — Tool called:**
-- Tool:
-- Input:
-- Why this tool:
-- Output:
+**Step 3 - Tool called:**
+- Tool: `create_fit_card`
+- Input: the outfit suggestion and selected listing.
+- Why this tool: The final response should be a shareable recommendation card, not just raw tool output.
+- Output: A formatted fit card with item details, outfit, and why the pairing works.
 
 **Final output to user:**
-
----
+The Gradio app shows three panels: the top listing found, the outfit idea, and the final fit card.
 
 ## Error Handling and Fail Points
 
-<!-- For each tool, describe the specific failure mode and what your agent does in response.
-     This maps to the error handling section of the rubric (F5-C1). -->
-
 | Tool | Failure mode | Agent response |
 |------|-------------|----------------|
-| `search_listings` | | |
-| `suggest_outfit` | | |
-| `create_fit_card` | | |
-
----
+| `search_listings` | No results match the parsed description, size, and price filters | Stop execution and show "No listings found matching your request. Try broader keywords such as 'jacket', 'outerwear', or a different color." |
+| `suggest_outfit` | The selected item is missing or no recommendation can be generated | Stop execution and show "Unable to generate an outfit recommendation for this item." |
+| `create_fit_card` | The outfit text or selected item is missing | Stop execution and show "Unable to create the final style card. Please try again." |
 
 ## Spec Reflection
 
-<!-- Answer both questions with at least 2–3 sentences each. -->
-
 **One way planning.md helped during implementation:**
+The planning document made the data flow explicit: query parsing feeds search, search stores a selected item, the selected item feeds outfit generation, and the outfit feeds card creation. That made the early-return error branches straightforward because each tool has a clear prerequisite.
 
 **One divergence from your spec, and why:**
-
----
-
-## Where to Start
-
-1. **Read `planning.md` and fill it out before writing any code.**
-2. Verify the data loads correctly by running `python utils/data_loader.py`.
-3. Build and test each tool individually before connecting them through your planning loop.
-
-Your implementation files go in this same directory. There's no required file structure for your agent code — organize it however makes sense for your design.
+The attached plan listed `search_listings(description: str)`, but the starter code already defined optional `size` and `max_price` parameters and the README warned that signatures should match the implementation. I kept the starter signature and treated size and price as optional filters, which preserves compatibility while still following the planned search-first workflow.
