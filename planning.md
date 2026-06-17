@@ -170,7 +170,7 @@ I will give Claude the Planning Loop, State Management, Error Handling, and Arch
 
 ## A Complete Interaction (Step by Step)
 
-**Example user query:** "Find me a black jacket under $60 in size M."
+**Example user query:** "Find me a black jacket under $80 in size M."
 
 **Step 1:**
 The agent parses the query:
@@ -179,7 +179,7 @@ The agent parses the query:
 {
     "description": "black jacket",
     "size": "M",
-    "max_price": 60.0,
+    "max_price": 80.0,
 }
 ```
 
@@ -187,7 +187,7 @@ The agent parses the query:
 The agent calls:
 
 ```python
-search_listings("black jacket", size="M", max_price=60.0)
+search_listings("black jacket", size="M", max_price=80.0)
 ```
 
 The tool filters listings by price and size, scores the remaining listings, and returns the best matches.

@@ -201,6 +201,9 @@ def _score_listing(listing: dict, description: str) -> int:
             score += 1
 
     requested_categories = _requested_categories(query_tokens)
+    if requested_categories and listing.get("category") not in requested_categories:
+        return 0
+
     if listing.get("category") in requested_categories:
         score += 5
 

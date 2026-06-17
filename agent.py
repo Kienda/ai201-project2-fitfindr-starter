@@ -86,6 +86,7 @@ def _description_from_query(query: str) -> str:
     description = re.sub(r"\bfind\s+me\b|\bi'?m\s+looking\s+for\b|\blooking\s+for\b", " ", description, flags=re.IGNORECASE)
     description = re.sub(r"[^a-zA-Z0-9\s/-]+", " ", description)
     description = re.sub(r"\s+", " ", description).strip()
+    description = re.sub(r"^(?:a|an|the)\s+", "", description, flags=re.IGNORECASE)
     return description or query.strip()
 
 
